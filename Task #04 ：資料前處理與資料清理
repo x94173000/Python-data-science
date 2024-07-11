@@ -1,0 +1,102 @@
+import numpy as np
+import pandas as pd
+raw_data = {'first_name': ['Jason', np.nan, 'Tina', 'Jake', 'Amy'],
+        'last_name': ['Miller', np.nan, 'Ali', 'Milner', 'Cooze'],
+        'age': [42, np.nan, 36, 24, 73],
+        'sex': ['m', np.nan, 'f', 'm', 'f'],
+        'preTestScore': [4, np.nan, np.nan, 2, 3],
+        'postTestScore': [25, np.nan, np.nan, 62, 70]}
+df = pd.DataFrame(raw_data, columns = ['first_name', 'last_name', 'age', 'sex', 'preTestScore', 'postTestScore'])
+df
+
+#Drop missing observations
+print('====================================================================')
+print('#Drop missing observations')
+df_dropmiss = df
+df_dropmiss = df_dropmiss.dropna()
+print(df_dropmiss)
+
+#Drop rows where all cells in that row is NA
+print('====================================================================')
+print('#Drop rows where all cells in that row is NA')
+df_droprows = df
+df_droprows.dropna(how = 'all')
+print(df_droprows)
+
+#Create a new column full of missing values
+print('====================================================================')
+print('#Create a new column full of missing values')
+df_newnan = df
+df_newnan['new_column'] = np.nan
+print(df_newnan)
+
+#Fill in missing data with zeros
+print('====================================================================')
+print('#Fill in missing data with zeros')
+df_zero = df
+df_zero.fillna(0, inplace = True)
+print(df_zero)
+
+#Fill in missing in preTestScore with the mean value of preTestScore
+print('====================================================================')
+print('#Fill in missing in preTestScore with the mean value of preTestScore')
+df_mean = df
+df_mean['preTestScore'].fillna(df_mean['preTestScore'].mean(), inplace=True)
+print(df_mean)
+
+#Fill in missing in postTestScore with each sex’s mean value of postTestScore
+print('====================================================================')
+print('#Fill in missing in postTestScore with each sex’s mean value of postTestScore')
+df_sexmean = df
+df_sexmean['postTestScore'] = df_sexmean.groupby('sex')['postTestScore'].transform(lambda x: x.fillna(x.mean()))
+print(df_sexmean)
+
+#Select some rows but ignore the missing data points
+print('====================================================================')
+print('#Select some rows but ignore the missing data points')
+df_ignore = df
+df_ignore[df_ignore['age'].notnull()]
+print(df_ignore)
+
+url = 'https://raw.githubusercontent.com/selva86/datasets/master/Cars93_miss.csv'
+df = pd.read_csv(url)
+
+#Check if df has any missing values
+print('#Check if df has any missing values')
+print(df.isnull())
+print('====================================================================')
+
+#Count the number of missing values in each column and find the maximum number of missing values.
+print('#Count the number of missing values in each column and find the maximum number of missing values')
+#計算每欄缺失值數量
+missing_values_count = df.isnull().sum()
+print(missing_values_count)
+#找最多
+max_missing_column = missing_values_count.idxmax()#缺失值最多的欄位名稱
+max_missing = missing_values_count.max()
+print('缺失值最多的欄位：')
+print(max_missing_column,max_missing)
+print('====================================================================')
+
+#How to replace missing values of multiple numeric columns with the mean?
+print('#How to replace missing values of multiple numeric columns with the mean?')
+# 找到所有數值列
+numeric_columns = df.select_dtypes(include=['float64', 'int64']).columns
+# 用每個數值列的均值填補缺失值
+df[numeric_columns] = df[numeric_columns].fillna(df[numeric_columns].mean())
+print(df.head())
+print('====================================================================')
+
+#Calculate the average price of different manufacturers.
+print('#Calculate the average price of different manufacturers.')
+average_price = df.groupby('Manufacturer')['Price'].mean().round(2) #兩位小數
+#將平均價格由大到小排序
+average_price_sorted = average_price.sort_values(ascending=False)
+print(average_price_sorted)
+print('====================================================================')
+
+#How to replace missing values of `price` columns with the mean depending on its manufacturers?
+print('#How to replace missing values of `price` columns with the mean depending on its manufacturers?')
+mean_price = df.groupby('Manufacturer')['Price'].mean()
+df['Price'].fillna(mean_price,inplace=True)
+print(df['Price'].head(10))
