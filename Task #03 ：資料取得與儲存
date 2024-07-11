@@ -1,0 +1,49 @@
+import requests
+from bs4 import BeautifulSoup
+import pandas as pd
+url = 'https://rate.bot.com.tw/xrt?Lang=zh-TW'
+r = requests.get(url)
+soup = BeautifulSoup(r.text, 'html5lib')
+
+#每個表頭資料選取後，再移除文字中的空白
+#幣別
+currency = soup.find_all("div", class_="visible-phone print_hide")
+currencies = [div.get_text(strip = True) for div in currency]
+#現金匯率本行買入
+buy_cash = soup.find_all("td", class_="rate-content-cash text-right print_hide")[::2] #[::2]表示從第一個元素開始，每隔兩個元素取一個，因為HTML結構中買入跟賣出是交錯的
+buycash = [td.get_text(strip = True) for td in buy_cash]
+#現金匯率本行賣出
+sell_cash = soup.find_all("td", class_="rate-content-cash text-right print_hide")[1::2] #[1::2]表示從第二個元素開始，每隔兩個元素取一個
+sellcash = [td.get_text(strip = True) for td in sell_cash]
+#即期匯率本行買入
+buy_realtime = soup.find_all("td", class_="rate-content-sight text-right print_hide")[::2]
+buyrealtime = [td.get_text(strip = True) for td in buy_realtime]
+#即期匯率本行賣出
+sell_realtime = soup.find_all("td", class_="rate-content-sight text-right print_hide")[1::2]
+sellrealtime = [td.get_text(strip = True) for td in sell_realtime]
+
+#建立dataframe
+df = pd.DataFrame({
+    '幣別':currencies,
+    '現金匯率本行買入':buycash,
+    '現金匯率本行賣出':sellcash,
+    '即期匯率本行買入':buyrealtime,
+    '即期匯率本行賣出':sellrealtime})
+df
+
+#新增更新時間欄位
+from datetime import datetime
+#date = soup.find("span", class_="time")
+#quoted_date = [span.get_text(strip = True) for span in date]
+current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+df['更新時間'] = current_time
+
+
+import sqlite3
+# 建立 SQLite 資料庫連線
+conn = sqlite3.connect('test.db')
+# 將 DataFrame 的資料寫入資料庫
+df.to_sql('BankofTaiwan_rate', conn, if_exists='replace', index=False)
+
+# 關閉資料庫連線
+conn.close()
