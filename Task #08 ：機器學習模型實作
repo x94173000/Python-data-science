@@ -1,0 +1,8 @@
+import pandas as pd
+import statsmodels.api as sm
+
+source = 'https://raw.githubusercontent.com/MachineLearningLiuMing/scikit-learn-primer-guide/master/Data.csv'
+raw_df = pd.read_csv(source)
+#用決策樹
+from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
+#利用 Country, Age, Salary 對 Purchased 進行分類學習，印出後三筆資料的 Purchased 為何
