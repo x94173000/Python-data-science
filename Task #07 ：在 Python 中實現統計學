@@ -1,0 +1,40 @@
+import numpy as np
+import pandas as pd
+
+ipl_data = {
+    'Team': ['Riders', 'Riders', 'Devils', 'Devils', 'Kings',
+    'kings', 'Kings', 'Kings', 'Riders', 'Royals', 'Royals', 'Riders'],
+    'Rank': [1, 2, 2, 3, 3,4 ,1 ,1,2 , 4,1,2],
+    'Year': [2014,2015,2014,2015,2014,2015,2016,2017,2016,2014,2015,2017],
+    'Points':[876,789,863,673,741,812,756,788,694,701,804,690]
+}
+df = pd.DataFrame(ipl_data)
+
+#使用pivot table進行分析
+pivot = pd.pivot_table(df, index='Year', columns='Team', values='Rank', aggfunc='count')
+print(pivot)
+
+import pandas as pd
+import statsmodels.api as sm
+
+source = 'https://raw.githubusercontent.com/cbrownley/foundations-for-analytics-with-python/master/statistics/winequality-both.csv'
+df = pd.read_csv(source)
+
+#後十筆當作測試資料
+test = df.tail(10)
+testy = test['quality']
+testX = sm.add_constant(test[test.columns.difference(['type','quality'])])
+
+#其餘資料當作訓練資料
+train = df.iloc[:-10]
+y = train['quality']
+X = sm.add_constant(train[train.columns.difference(['type','quality'])])
+
+model = sm.OLS(y,X).fit() #A:使用最小平方法做回歸分析模型
+
+print(model.summary()) #B:顯示模型摘要
+print(model.predict(testX)) #C:拿測試集資料看模型預測結果(Quality)
+
+#將預測結果與原始Quality做比較
+comparison = pd.DataFrame({'Actual Quality': testy, 'Predicted Quality': model.predict(testX)})
+print(comparison)
