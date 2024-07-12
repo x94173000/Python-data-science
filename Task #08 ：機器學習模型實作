@@ -3,6 +3,80 @@ import statsmodels.api as sm
 
 source = 'https://raw.githubusercontent.com/MachineLearningLiuMing/scikit-learn-primer-guide/master/Data.csv'
 raw_df = pd.read_csv(source)
-#用決策樹
-from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
+raw_df.head()
+#資料處理
+#檢查遺漏值
+raw_df.isnull().sum()
+#age遺漏值用平均數去填補，salary用中位數
+raw_df['Age'].fillna(raw_df['Age'].mean(), inplace=True)
+raw_df['Salary'].fillna(raw_df['Salary'].median(), inplace=True)
+#country轉成one-hot encoding
+df = pd.get_dummies(raw_df, columns=['Country'])
+
 #利用 Country, Age, Salary 對 Purchased 進行分類學習，印出後三筆資料的 Purchased 為何
+#決策樹
+from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
+from sklearn.model_selection import train_test_split
+# 切分訓練集和測試集
+X = df[['Age','Salary','Country_France','Country_Germany','Country_Spain']]
+y = df['Purchased']
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+# 創建分類樹模型
+clf_model = DecisionTreeClassifier()
+# 訓練模型
+clf_model.fit(X_train, y_train)
+# 使用模型進行預測
+y_pred_clf = clf_model.predict(X_test)
+print(y_pred_clf)
+
+#利用 Country, Age, Purchased 對 Salary 進行迴歸學習，印出後三筆資料的 Salary 為何
+#將Purchased轉成dummy variables
+df['Purchased'] = df['Purchased'].replace({'No': 0, 'Yes': 1})
+# 切分訓練集和測試集
+X = df[['Age','Purchased','Country_France','Country_Germany','Country_Spain']]
+y = df['Salary']
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+# 創建分類樹模型
+reg_model = DecisionTreeRegressor()
+# 訓練模型
+reg_model.fit(X_train, y_train)
+# 使用模型進行預測
+y_pred_reg = reg_model.predict(X_test)
+print(y_pred_reg)
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
+X = np.array([[1, 2], [1, 4], [1, 0],
+              [4, 2], [4, 4], [4, 0]])
+
+print('===== 原始資料 =====')
+df = pd.DataFrame(X)
+from sklearn.cluster import KMeans
+# KMeans = 3
+kmeans3 = KMeans(n_clusters=3)
+kmeans3.fit(X)
+labels = kmeans3.labels_
+print('k=3的分群結果:', labels)
+
+# KMeans = 4
+kmeans4 = KMeans(n_clusters=4)
+kmeans4.fit(X)
+labels = kmeans4.labels_
+print('k=4的分群結果:', labels)
+
+# KMeans = 5
+kmeans5 = KMeans(n_clusters=5)
+kmeans5.fit(X)
+labels = kmeans5.labels_
+print('k=5的分群結果:', labels)
+
+#用elbow method看分成幾群較合適
+DistanceList = []
+for i in range(1,7): #測試將資料分為1~ˊ群
+    KM = KMeans(n_clusters=i, n_init='auto', random_state=1)
+    KM.fit(X)
+    DistanceList.append(KM.inertia_) #求出每個Cluster內的資料與其中心點之平方距離和，並用List記錄起來
+plt.plot(range(1,7), DistanceList)
+plt.show()
